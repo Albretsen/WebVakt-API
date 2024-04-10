@@ -12,8 +12,8 @@ namespace WebVakt_API.Controllers
         [Authorize]
         public ActionResult<UserProfile> Get()
         {
-            var givenName = User.FindFirst("given_name")?.Value;
-            var familyName = User.FindFirst("family_name")?.Value;
+            var givenName = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value;
+            var familyName = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")?.Value;
 
             foreach (var claim in User.Claims)
             {
