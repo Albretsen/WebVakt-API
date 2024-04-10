@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using System.Security.Claims;
+using WebVakt_API;
+using WebVakt_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,16 +28,15 @@ builder.Services.AddAuthentication(options => { options.DefaultScheme = JwtBeare
         jwtOptions.Audience = builder.Configuration["AzureAdB2C:ClientId"];
     });
 
-// Add services to the container.
-/*builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApi(options =>
-    {
-        builder.Configuration.Bind("AzureAdB2C", options);
-    }, options => { builder.Configuration.Bind("AzureAdB2C", options); });*/
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 

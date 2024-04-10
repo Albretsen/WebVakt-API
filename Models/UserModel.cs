@@ -1,7 +1,10 @@
-﻿namespace WebVakt_API.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace WebVakt_API.Models
 {
     public class UserModel
     {
+        [Key]
         public int user_id { get; set; }
 
         public string azure_oid { get; set; }
