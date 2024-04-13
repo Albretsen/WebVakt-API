@@ -16,34 +16,37 @@ namespace WebVakt_API.Services
             _context = context;
         }
 
-        public async Task<(bool Success, UserModel User, string Message)> CreateUserAsync(ClaimsPrincipal userPrincipal)
+        public async Task<(bool Success, User User, string Message)> UserToDB(User user)
         {
-            string azure_oid = userPrincipal.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
-            var emailClaim = userPrincipal.Claims.FirstOrDefault(c => c.Type == "emails");
-            string email = emailClaim != null ? emailClaim.Value : null;
-            string given_name = userPrincipal.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value;
-            string family_name = userPrincipal.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")?.Value;
-            DateTime registered_date = DateTime.Now;
-
-            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.azure_oid == azure_oid);
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.AzureOID == user.AzureOID);
             if (existingUser != null)
             {
                 return (false, null, "A user with this Azure OID already exists.");
             }
 
-            var user = new UserModel
-            {
-                azure_oid = azure_oid,
-                email = email,
-                given_name = given_name,
-                family_name = family_name,
-                registered_date = registered_date,
-            };
-
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             return (true, user, null);
+        }
+
+        public User ClaimsToUser(ClaimsPrincipal claims)
+        {
+            string AzureOID = claims.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
+            var emailClaim = claims.Claims.FirstOrDefault(c => c.Type == "emails");
+            string Email = emailClaim != null ? emailClaim.Value : null;
+            string GivenName = claims.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value;
+            string FamilyName = claims.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")?.Value;
+            DateTime RegisteredDate = DateTime.Now;
+
+            return new User
+            {
+                AzureOID = AzureOID,
+                Email = Email,
+                GivenName = GivenName,
+                FamilyName = FamilyName,
+                RegisteredDate = RegisteredDate,
+            };
         }
     }
 }

@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebVakt_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/health")]
     [ApiController]
     public class HealthController : Controller
     {
         [HttpGet]
-        public ActionResult<UserProfile> Get()
+        public ActionResult Get()
         {
             return Ok(new { status = "Healthy" });
         }
