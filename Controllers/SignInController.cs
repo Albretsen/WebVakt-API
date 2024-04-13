@@ -6,22 +6,24 @@ using System.Threading.Tasks;
 
 namespace WebVakt_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/sign-in")]
     [ApiController]
-    public class SignUpController : Controller
+    public class SignInController : Controller
     {
         private readonly IUserService _userService;
 
-        public SignUpController(IUserService userService)
+        public SignInController(IUserService userService)
         {
             _userService = userService;
         }
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> SignUp()
+        public async Task<IActionResult> SignIn()
         {
-            var result = await _userService.CreateUserAsync(User);
+            User user = _userService.ClaimsToUser(User);
+
+            var result = await _userService.UserToDB(user);
 
             return result.Success ? Ok(result.User) : Conflict(result.Message);
         }
