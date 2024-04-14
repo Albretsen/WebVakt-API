@@ -37,6 +37,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IMonitorService, MonitorService>(); 
+builder.Services.AddHostedService<MonitorBackgroundService>();
 
 var app = builder.Build();
 
