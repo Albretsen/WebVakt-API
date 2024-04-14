@@ -1,4 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿/*
+Monitor scheduling pseudocode:
+
+GetFromDB where ScheduledTime is in the past
+SendAllResults to Queue
+SetAllResult ScheduledTime = DateTime.now + CRON interval time
+ */
+
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebVakt_API.Models
@@ -15,6 +23,12 @@ namespace WebVakt_API.Models
 
         [Required]
         public string Selector { get; set; }
+
+        [Required]
+        public string Type { get; set; }
+
+        [Required]
+        public string[] Attributes { get; set; }
 
         public string? Name { get; set; }
 
