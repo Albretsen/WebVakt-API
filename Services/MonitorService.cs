@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using WebVakt_API.Models;
 using WebVakt_API.Services;
 using Azure.Storage.Queues;
+using System.Text.Json;
+using NCrontab;
 
 namespace WebVakt_API.Services
 {
@@ -21,32 +23,57 @@ namespace WebVakt_API.Services
 
         public async Task<int> ProcessDueMonitorsAsync()
         {
-            var dueMonitorsWithLatestSnapshot = await _context.Monitors
-                .Where(m => m.IsActive && m.ScheduledNext <= DateTime.UtcNow)
-                .Select(m => new
+            var dueData = await _context.Websites
+                .Select(w => new
                 {
-                    Monitor = m,
-                    Snapshot = _context.Snapshots
-                                             .Where(s => s.MonitorID == m.MonitorID)
-                                             .OrderByDescending(s => s.DateCaptured)
-                                             .FirstOrDefault(),
-                    WebsiteUrl = m.Website.URL,
+                    Website = w,
+                    Monitors = w.Monitors
+                                .Where(m => m.IsActive && m.ScheduledNext <= DateTime.UtcNow)
+                                .Select(m => new
+                                {
+                                    Monitor = m,
+                                    LatestSnapshot = _context.Snapshots
+                                        .Where(s => s.MonitorID == m.MonitorID)
+                                        .OrderByDescending(s => s.DateCaptured)
+                                        .FirstOrDefault()
+                                })
+                                .ToList()
                 })
+                .Where(w => w.Monitors.Any())
                 .ToListAsync();
 
-            foreach (var item in dueMonitorsWithLatestSnapshot)
+            foreach (var websiteData in dueData)
             {
-                await QueueMonitorAsync(item.Monitor, item.Snapshot, item.WebsiteUrl);
+                var messagePayload = JsonSerializer.Serialize(new
+                {
+                    WebsiteURL = websiteData.Website.URL,
+                    websiteData.Website.WebsiteID,
+                    websiteData.Website.UserId,
+                    Monitors = websiteData.Monitors.Select(m => new
+                    {
+                        m.Monitor.MonitorID,
+                        m.Monitor.ScheduledNext,
+                        m.Monitor.Selector,
+                        m.Monitor.Type,
+                        m.Monitor.Attributes,
+                        m.LatestSnapshot?.SnapshotID,
+                        m.LatestSnapshot?.Value
+                    })
+                });
 
-                await UpdateMonitorScheduleAsync(item.Monitor);
+                await QueueMonitorDataAsync(messagePayload);
+
+                foreach (var monitorInfo in websiteData.Monitors)
+                {
+                    await UpdateMonitorScheduleAsync(monitorInfo.Monitor);
+                }
             }
 
-            return dueMonitorsWithLatestSnapshot.Count;
+            return dueData.Sum(w => w.Monitors.Count);
         }
 
-        public async Task QueueMonitorAsync(Models.Monitor monitor, Models.Snapshot snapshot, string URL)
+        public async Task QueueMonitorDataAsync(string messagePayload)
         {
-            // Use the configuration to get the connection string
             string connectionString = _configuration.GetConnectionString("QueueConnection");
             string queueName = "monitor-tasks";
 
@@ -55,18 +82,35 @@ namespace WebVakt_API.Services
 
             if (await queueClient.ExistsAsync())
             {
-                string message = $"MonitorID: {monitor.MonitorID}, SnapshotValue: {snapshot?.Value}, URL: {URL}";
-                await queueClient.SendMessageAsync(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(message)));
+                await queueClient.SendMessageAsync(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(messagePayload)));
             }
         }
 
         public async Task UpdateMonitorScheduleAsync(Models.Monitor monitor)
         {
-            // Placeholder for cron parsing and calculation. Consider using a library like NCrontab or Quartz.NET.
-            monitor.ScheduledNext = DateTime.UtcNow.AddSeconds(15); 
+            try
+            {
+                var cronSchedule = CrontabSchedule.Parse(monitor.CronExpression);
 
-            _context.Monitors.Update(monitor);
-            await _context.SaveChangesAsync();
+                var nextOccurrence = cronSchedule.GetNextOccurrence(DateTime.UtcNow);
+
+                monitor.ScheduledNext = nextOccurrence;
+
+                _context.Monitors.Update(monitor);
+                await _context.SaveChangesAsync();
+            }
+            catch (CrontabException ex)
+            {
+                Console.Error.WriteLine($"Error parsing cron expression for monitor {monitor.MonitorID}: {ex.Message}");
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.Error.WriteLine($"Database update error for monitor {monitor.MonitorID}: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"An unexpected error occurred for monitor {monitor.MonitorID}: {ex.Message}");
+            }
         }
     }
 }

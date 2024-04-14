@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic; // Import necessary for using List<T>
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebVakt_API.Models
@@ -22,5 +23,7 @@ namespace WebVakt_API.Models
 
         [Required]
         public DateTime DateAdded { get; set; }
+
+        public ICollection<Monitor> Monitors { get; set; } = new List<Monitor>();
     }
 }

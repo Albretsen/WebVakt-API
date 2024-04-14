@@ -19,9 +19,9 @@ namespace WebVakt_API.Services
         /// queue monitors for processing outside the regular scheduling mechanism,
         /// for example in response to a user action.
         /// </summary>
-        /// <param name="monitor">The monitor to add to the queue.</param>
+        /// <param name="messagePayload">The payload containing monitor data to add to the queue.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task QueueMonitorAsync(Models.Monitor monitor, Models.Snapshot snapshot, string URL);
+        Task QueueMonitorDataAsync(string messagePayload);
 
         /// <summary>
         /// Updates the ScheduledNext time for a given monitor based on its cron expression.
