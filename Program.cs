@@ -28,8 +28,8 @@ builder.Services.AddAuthentication(options => { options.DefaultScheme = JwtBeare
         jwtOptions.Audience = builder.Configuration["AzureAdB2C:ClientId"];
     });
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+/*builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));*/
 
 
 builder.Services.AddControllers();
