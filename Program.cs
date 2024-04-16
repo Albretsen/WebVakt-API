@@ -5,6 +5,7 @@ using Microsoft.Identity.Web;
 using System.Security.Claims;
 using WebVakt_API;
 using WebVakt_API.Services;
+using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMonitorService, MonitorService>(); 
 builder.Services.AddHostedService<MonitorBackgroundService>();
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    clientBuilder.AddBlobServiceClient(builder.Configuration["ConnectionStrings:QueueConnection:blob"]!, preferMsi: true);
+    clientBuilder.AddQueueServiceClient(builder.Configuration["ConnectionStrings:QueueConnection:queue"]!, preferMsi: true);
+});
 
 var app = builder.Build();
 
