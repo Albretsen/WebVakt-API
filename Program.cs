@@ -27,14 +27,10 @@ builder.Services.AddAuthentication(options => { options.DefaultScheme = JwtBeare
         jwtOptions.Authority =
             $"{builder.Configuration["AzureAdB2C:Instance"]}/{builder.Configuration["AzureAdB2C:TenantId"]}/{builder.Configuration["AzureAdB2C:SignUpSignInPolicyId"]}/v2.0/";
         jwtOptions.Audience = builder.Configuration["AzureAdB2C:ClientId"];
-    })
-    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+    });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
-
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
