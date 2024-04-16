@@ -76,6 +76,7 @@ namespace WebVakt_API.Services
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"An error occurred while processing due monitors: {ex.Message}");
+                return 0;
             }
         }
 
