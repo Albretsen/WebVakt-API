@@ -30,7 +30,7 @@ public class MonitorBackgroundService : BackgroundService
                 await monitorService.ProcessDueMonitorsAsync();
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
         }
 
         _logger.LogInformation("Monitor Check Background Service is stopping.");
