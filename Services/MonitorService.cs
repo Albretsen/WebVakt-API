@@ -23,7 +23,9 @@ namespace WebVakt_API.Services
 
         public async Task<int> ProcessDueMonitorsAsync()
         {
-            var dueData = await _context.Websites
+            try
+            {
+                var dueData = await _context.Websites
                 .Select(w => new
                 {
                     Website = w,
@@ -42,34 +44,39 @@ namespace WebVakt_API.Services
                 .Where(w => w.Monitors.Any())
                 .ToListAsync();
 
-            foreach (var websiteData in dueData)
-            {
-                var messagePayload = JsonSerializer.Serialize(new
+                foreach (var websiteData in dueData)
                 {
-                    WebsiteURL = websiteData.Website.URL,
-                    websiteData.Website.WebsiteID,
-                    websiteData.Website.UserId,
-                    Monitors = websiteData.Monitors.Select(m => new
+                    var messagePayload = JsonSerializer.Serialize(new
                     {
-                        m.Monitor.MonitorID,
-                        m.Monitor.ScheduledNext,
-                        m.Monitor.Selector,
-                        m.Monitor.Type,
-                        m.Monitor.Attributes,
-                        m.LatestSnapshot?.SnapshotID,
-                        m.LatestSnapshot?.Value
-                    })
-                });
+                        WebsiteURL = websiteData.Website.URL,
+                        websiteData.Website.WebsiteID,
+                        websiteData.Website.UserId,
+                        Monitors = websiteData.Monitors.Select(m => new
+                        {
+                            m.Monitor.MonitorID,
+                            m.Monitor.ScheduledNext,
+                            m.Monitor.Selector,
+                            m.Monitor.Type,
+                            m.Monitor.Attributes,
+                            m.LatestSnapshot?.SnapshotID,
+                            m.LatestSnapshot?.Value
+                        })
+                    });
 
-                await QueueMonitorDataAsync(messagePayload);
+                    await QueueMonitorDataAsync(messagePayload);
 
-                foreach (var monitorInfo in websiteData.Monitors)
-                {
-                    await UpdateMonitorScheduleAsync(monitorInfo.Monitor);
+                    foreach (var monitorInfo in websiteData.Monitors)
+                    {
+                        await UpdateMonitorScheduleAsync(monitorInfo.Monitor);
+                    }
                 }
-            }
 
-            return dueData.Sum(w => w.Monitors.Count);
+                return dueData.Sum(w => w.Monitors.Count);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"An error occurred while processing due monitors: {ex.Message}");
+            }
         }
 
         public async Task QueueMonitorDataAsync(string messagePayload)
