@@ -3,6 +3,10 @@
     "apis1": {
       "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.ApiManagement/service/WebVakt-API-Management/apis/WebVakt-API",
       "type": "apis.azure"
+    },
+    "identityapp1": {
+      "connectionInfo": "App registration: WebVakt-API, Tenant: WebVakt AD B2C (webvaktcom.onmicrosoft.com - AAD B2C)",
+      "type": "identityapp.default"
     }
   }
 }
