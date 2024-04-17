@@ -8,7 +8,6 @@ namespace WebVakt_API.Models
         [Key]
         public int ErrorID { get; set; }
 
-        [Required]
         public int UserId { get; set; }
         [ForeignKey("UserId")]
         public User User { get; set; }

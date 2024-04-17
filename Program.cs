@@ -6,6 +6,7 @@ using System.Security.Claims;
 using WebVakt_API;
 using WebVakt_API.Services;
 using Microsoft.Extensions.Azure;
+using WebVakt_API.Utility;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,5 +66,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseExceptionMiddleware();
 
 app.Run();

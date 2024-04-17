@@ -58,7 +58,7 @@ namespace WebVakt_API.Services
                             m.Monitor.Selector,
                             m.Monitor.Type,
                             m.Monitor.Attributes,
-                            m.LatestSnapshot?.SnapshotID,
+                            SnapshotID = m.LatestSnapshot?.SnapshotID,
                             m.LatestSnapshot?.Value
                         })
                     });
